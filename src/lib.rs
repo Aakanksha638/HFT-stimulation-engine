@@ -38,6 +38,12 @@ impl OrderBook { // Define the order-book operations.
         } // Finish initialization.
     } // Finish the constructor.
 
+    
+if incoming.quantity == 0 || self.order_prices.contains_key(&incoming.id) { // Reject zero quantities and duplicate live order IDs.
+    return Vec::new(); // Ignore invalid orders without changing the book.
+} // Finish order validation.
+
+
     pub fn add_order(&mut self, mut incoming: Order) -> Vec<Trade> {
         if incoming.quantity == 0 { // Reject orders with no quantity.
         return Vec::new(); // Return no trades and keep the book unchanged.
@@ -167,4 +173,13 @@ fn rejects_zero_quantity_order() { // Verify zero-quantity orders are ignored.
 
     assert!(trades.is_empty()); // No trade should occur.
     assert_eq!(book.best_bid(), None); // The invalid order should not enter the book.
+/}/ Run this test with cargo test.
+fn rejects_duplicate_live_order_id() { // Ensure a live order ID cannot be reused.
+    let mut book = OrderBook::new(); // Create an empty order book.
+    book.add_order(Order { id: 1, side: Side::Buy, price: 100, quantity: 5 }); // Add the original order.
+    let trades = book.add_order(Order { id: 1, side: Side::Sell, price: 100, quantity: 5 }); // Try reusing its ID.
+    assert!(trades.is_empty()); // The duplicate order must not execute a trade.
+    assert_eq!(book.best_bid(), Some(100)); // The original bid should remain.
+    assert_eq!(book.best_ask(), None); // The duplicate sell should not enter the book.
 } // Finish the test.
+
