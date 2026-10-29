@@ -173,7 +173,7 @@ fn rejects_zero_quantity_order() { // Verify zero-quantity orders are ignored.
 
     assert!(trades.is_empty()); // No trade should occur.
     assert_eq!(book.best_bid(), None); // The invalid order should not enter the book.
-/}/ Run this test with cargo test.
+} // Run this test with cargo test.
 fn rejects_duplicate_live_order_id() { // Ensure a live order ID cannot be reused.
     let mut book = OrderBook::new(); // Create an empty order book.
     book.add_order(Order { id: 1, side: Side::Buy, price: 100, quantity: 5 }); // Add the original order.
