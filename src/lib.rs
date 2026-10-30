@@ -221,7 +221,15 @@ impl OrderBook {
     pub fn best_ask(&self) -> Option<u64> {
         // Return the lowest resting sell price.
         self.asks.keys().next().copied() // Read the smallest ask price.
-    } // Finish best-ask lookup.
+    }
+
+    pub fn spread(&self) -> Option<u64> {
+        // Calculate the bid-ask spread.
+        let bid = self.best_bid()?; // Get the highest buyer price or return None.
+        let ask = self.best_ask()?; // Get the lowest seller price or return None.
+        Some(ask - bid) // Return the difference between ask and bid.
+    } // Finish spread calculation.
+    // Finish best-ask lookup.
 } // Finish the order-book implementation.
 
 #[test] // Run this test with cargo test.
@@ -257,4 +265,22 @@ fn rejects_duplicate_live_order_id() {
     assert!(trades.is_empty()); // The duplicate order must not execute a trade.
     assert_eq!(book.best_bid(), Some(100)); // The original bid should remain.
     assert_eq!(book.best_ask(), None); // The duplicate sell should not enter the book.
+
+    fn calculates_bid_ask_spread() {
+        // Verify the spread calculation.
+        let mut book = OrderBook::new(); // Create an empty order book.
+        book.add_order(Order {
+            id: 1,
+            side: Side::Buy,
+            price: 100,
+            quantity: 5,
+        }); // Add a buyer at 100.
+        book.add_order(Order {
+            id: 2,
+            side: Side::Sell,
+            price: 105,
+            quantity: 5,
+        }); // Add a seller at 105.
+        assert_eq!(book.spread(), Some(5)); // Verify the spread is 5.
+    }
 } // Finish the test.
