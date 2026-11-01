@@ -221,15 +221,21 @@ impl OrderBook {
     pub fn best_ask(&self) -> Option<u64> {
         // Return the lowest resting sell price.
         self.asks.keys().next().copied() // Read the smallest ask price.
-    }
+    } // Finish best-ask lookup.
 
     pub fn spread(&self) -> Option<u64> {
         // Calculate the bid-ask spread.
         let bid = self.best_bid()?; // Get the highest buyer price or return None.
         let ask = self.best_ask()?; // Get the lowest seller price or return None.
         Some(ask - bid) // Return the difference between ask and bid.
-    } // Finish spread calculation.
-    // Finish best-ask lookup.
+    } // Finish spread calculation
+
+    pub fn mid_price(&self) -> Option<f64> {
+        // Calculate the midpoint of the market.
+        let bid = self.best_bid()?; // Get the highest bid or return None.
+        let ask = self.best_ask()?; // Get the lowest ask or return None.
+        Some((bid as f64 + ask as f64) / 2.0) // Calculate the midpoint.
+    } // Finish mid-price calculation.
 } // Finish the order-book implementation.
 
 #[test] // Run this test with cargo test.
@@ -282,5 +288,22 @@ fn rejects_duplicate_live_order_id() {
             quantity: 5,
         }); // Add a seller at 105.
         assert_eq!(book.spread(), Some(5)); // Verify the spread is 5.
+    }
+    fn calculates_mid_price() {
+        // Verify the market midpoint.
+        let mut book = OrderBook::new(); // Create an empty order book.
+        book.add_order(Order {
+            id: 1,
+            side: Side::Buy,
+            price: 100,
+            quantity: 5,
+        }); // Add a bid at 100.
+        book.add_order(Order {
+            id: 2,
+            side: Side::Sell,
+            price: 110,
+            quantity: 5,
+        }); // Add an ask at 110.
+        assert_eq!(book.mid_price(), Some(105.0)); // The midpoint should be 105.
     }
 } // Finish the test.
