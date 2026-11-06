@@ -235,7 +235,7 @@ impl OrderBook {
         let bid = self.best_bid()?; // Get the highest bid or return None.
         let ask = self.best_ask()?; // Get the lowest ask or return None.
         Some((bid as f64 + ask as f64) / 2.0) // Calculate the midpoint.
-    }
+    } v
 
     pub fn best_bid_quantity(&self) -> u64 {
         // Get total quantity at the best bid.
@@ -254,7 +254,22 @@ impl OrderBook {
             .map(|(_, orders)| orders.iter().map(|order| order.quantity).sum()) // Sum quantities at that price.
             .unwrap_or(0) // Return zero when no asks exist.
     } // Finish best ask quantity calculation.
-    // Finish mid-price calculation.
+    
+pub fn total_bid_quantity(&self) -> u64 { // Calculate total resting buy quantity.
+    self.bids.values() // Access all bid queues.
+        .flat_map(|orders| orders.iter()) // Iterate through every buy order.
+        .map(|order| order.quantity) // Extract each order's quantity.
+        .sum() // Add all buy quantities.
+} // Finish total bid depth calculation.
+
+pub fn total_ask_quantity(&self) -> u64 { // Calculate total resting sell quantity.
+    self.asks.values() // Access all ask queues.
+        .flat_map(|orders| orders.iter()) // Iterate through every sell order.
+        .map(|order| order.quantity) // Extract each order's quantity.
+        .sum() // Add all sell quantities.
+} // Finish total ask depth calculation.
+
+    
 } // Finish the order-book implementation.
 
 #[test] // Run this test with cargo test.
@@ -355,4 +370,14 @@ fn rejects_duplicate_live_order_id() {
         assert_eq!(book.best_bid_quantity(), 8); // Best bid depth should total eight.
         assert_eq!(book.best_ask_quantity(), 10); // Best ask depth should total ten.
     }
+
+    fn calculates_total_order_book_depth() { // Verify total resting liquidity.
+    let mut book = OrderBook::new(); // Create an empty book.
+    book.add_order(Order { id: 1, side: Side::Buy, price: 100, quantity: 5 }); // Add five buy units.
+    book.add_order(Order { id: 2, side: Side::Buy, price: 99, quantity: 3 }); // Add three more buy units at another price.
+    book.add_order(Order { id: 3, side: Side::Sell, price: 110, quantity: 4 }); // Add four sell units.
+    book.add_order(Order { id: 4, side: Side::Sell, price: 111, quantity: 6 }); // Add six more sell units at another price.
+    assert_eq!(book.total_bid_quantity(), 8); // Total buy depth should be eight.
+    assert_eq!(book.total_ask_quantity(), 10); // Total sell depth should be ten.
+}
 } // Finish the test.
